@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 const port = 8000
 
 type application struct {
+	DSN    string
 	Domain string
 }
 
@@ -17,6 +19,8 @@ func main() {
 	var app application
 
 	// Read command line flags
+	flag.StringVar(&app.DSN, "dsn", "host=localhost port=54320 user=postgres password=postgres dbname=movies sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
+	flag.Parse()
 
 	// Connect to db
 
