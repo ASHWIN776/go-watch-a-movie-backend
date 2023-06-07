@@ -25,7 +25,7 @@ func (app *application) Home(w http.ResponseWriter, r *http.Request) {
 func (app *application) AllMovies(w http.ResponseWriter, r *http.Request) {
 	movies, err := app.DB.AllMovies()
 	if err != nil {
-		log.Println("Failed to get movies, err: ", err)
+		app.errorJSON(w, err)
 		return
 	}
 
