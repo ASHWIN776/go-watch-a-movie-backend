@@ -27,7 +27,7 @@ func (repo *PostgresDBRepo) AllMovies() ([]models.Movie, error) {
 
 	stmt := `
 		select 
-			id, title, release_date, runtime, mpaa_rating
+			id, title, release_date, runtime, mpaa_rating,
 			description, coalesce(image, ''), 
 			created_at, updated_at
 		from
