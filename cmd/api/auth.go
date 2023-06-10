@@ -2,20 +2,21 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
 type Auth struct {
-	Issuer         string
-	Audience       string
-	Secret         string
-	TokenExpiry    time.Duration
-	RefreshExpirty time.Duration
-	CookieDomain   string
-	CookiePath     string
-	CookieName     string
+	Issuer        string
+	Audience      string
+	Secret        string
+	TokenExpiry   time.Duration
+	RefreshExpiry time.Duration
+	CookieDomain  string
+	CookiePath    string
+	CookieName    string
 }
 
 // Minimal amount of user info needed to issue a token
@@ -71,7 +72,7 @@ func (j *Auth) GenerateTokenPair(user *JWTUser) (TokenPairs, error) {
 	refreshTokenClaims["iat"] = time.Now().UTC().Unix()
 
 	// Expiry for the Refresh Token
-	refreshTokenClaims["exp"] = time.Now().UTC().Add(j.RefreshExpirty).Unix()
+	refreshTokenClaims["exp"] = time.Now().UTC().Add(j.RefreshExpiry).Unix()
 
 	// Create Signed Refresh Tokens
 	signedRefreshToken, err := refreshToken.SignedString([]byte(j.Secret))
@@ -89,4 +90,34 @@ func (j *Auth) GenerateTokenPair(user *JWTUser) (TokenPairs, error) {
 
 	// Return TokenPairs instance
 	return tokenPairs, nil
+}
+
+// This cookie will be sent back - containing the refresh token(won't be accessible by js)
+func (j *Auth) GenerateRefreshCookie(refreshToken string) *http.Cookie {
+	return &http.Cookie{
+		Name:     j.CookieName,
+		Path:     j.CookiePath,
+		Value:    refreshToken,
+		Expires:  time.Now().Add(j.RefreshExpiry),
+		MaxAge:   int(j.RefreshExpiry),
+		SameSite: http.SameSiteStrictMode,
+		Domain:   j.CookieDomain,
+		HttpOnly: true,
+		Secure:   true,
+	}
+}
+
+// This function will be used to delete the cookie in user's browser
+func (j *Auth) GetExpiredRefreshCookie(refreshToken string) *http.Cookie {
+	return &http.Cookie{
+		Name:     j.CookieName,
+		Path:     j.CookiePath,
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		SameSite: http.SameSiteStrictMode,
+		Domain:   j.CookieDomain,
+		HttpOnly: true,
+		Secure:   true,
+	}
 }

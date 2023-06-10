@@ -49,14 +49,14 @@ func main() {
 	defer app.DB.Connection().Close()
 
 	app.auth = Auth{
-		Issuer:         app.JWTIssuer,
-		Audience:       app.JWTAudience,
-		Secret:         app.JWTSecret,
-		TokenExpiry:    time.Minute * 15,
-		RefreshExpirty: time.Hour * 24,
-		CookiePath:     "/",
-		CookieName:     "__Host-refresh_token",
-		CookieDomain:   app.CookieDomain,
+		Issuer:        app.JWTIssuer,
+		Audience:      app.JWTAudience,
+		Secret:        app.JWTSecret,
+		TokenExpiry:   time.Minute * 15,
+		RefreshExpiry: time.Hour * 24,
+		CookiePath:    "/",
+		CookieName:    "__Host-refresh_token",
+		CookieDomain:  app.CookieDomain,
 	}
 
 	// Start a web server
