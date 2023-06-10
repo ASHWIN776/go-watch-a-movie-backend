@@ -34,3 +34,28 @@ func (app *application) AllMovies(w http.ResponseWriter, r *http.Request) {
 		log.Println("Failed to writeJSON err: ", err)
 	}
 }
+
+func (app *application) authenticate(w http.ResponseWriter, r *http.Request) {
+	// read json payload
+
+	// validate user against db
+
+	// check password
+
+	// create a jwt user
+	u := JWTUser{
+		ID:        1,
+		FirstName: "Admin",
+		LastName:  "User",
+	}
+
+	// Generate Tokens
+	tokens, err := app.auth.GenerateTokenPair(&u)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+	log.Println(tokens.Token)
+
+	w.Write([]byte(tokens.Token))
+}
