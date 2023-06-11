@@ -37,6 +37,8 @@ func (app *application) AllMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) authenticate(w http.ResponseWriter, r *http.Request) {
+	log.Println("Incoming Login Request")
+
 	// read json payload
 	var requestPayload struct {
 		Email    string `json:"email"`
