@@ -4,6 +4,9 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func (app *application) Home(w http.ResponseWriter, r *http.Request) {
@@ -85,4 +88,62 @@ func (app *application) authenticate(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, refreshCookie)
 
 	app.writeJSON(w, tokens, http.StatusAccepted)
+}
+
+// Get the refresh token from the cookie sent with the req, get the user id which is stored in the subject of claims and then create another token
+func (app *application) refreshToken(w http.ResponseWriter, r *http.Request) {
+	for _, cookie := range r.Cookies() {
+
+		if cookie.Name == app.auth.CookieName {
+			claims := &Claims{}
+			refreshToken := cookie.Value
+
+			// parse the token to get the claims
+			_, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (interface{}, error) {
+				return []byte(app.JWTSecret), nil
+			})
+			if err != nil {
+				app.writeJSON(w, errors.New("unauthorized"), http.StatusUnauthorized)
+				return
+			}
+
+			// get the user id from token claims
+			userId, err := strconv.Atoi(claims.Subject)
+			if err != nil {
+				app.writeJSON(w, errors.New("unknown user"), http.StatusUnauthorized)
+				return
+			}
+
+			// Get the user info from the db using the userID
+			user, err := app.DB.GetUserByID(userId)
+			if err != nil {
+				app.writeJSON(w, errors.New("unknown user"), http.StatusUnauthorized)
+				return
+			}
+
+			// Create Token pairs and sending the access token in json and refresh token in cookie --------------------------------------------------------------------------------------
+			// Create a jwt user
+			u := JWTUser{
+				ID:        userId,
+				FirstName: user.FirstName,
+				LastName:  user.LastName,
+			}
+
+			// Generate Tokens
+			tokens, err := app.auth.GenerateTokenPair(&u)
+			if err != nil {
+				app.errorJSON(w, errors.New("error generating tokens"))
+			}
+
+			refreshCookie := app.auth.GenerateRefreshCookie(tokens.RefreshToken)
+
+			// Will send the cookie with the response
+			http.SetCookie(w, refreshCookie)
+
+			// Sending the access token as JSON
+			app.writeJSON(w, tokens, http.StatusOK)
+
+			// -----------------------------------------------------------------------------------
+		}
+	}
 }
